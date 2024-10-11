@@ -1,6 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { Author, Article } = require('./models');
+const Author = require('./models/author');
+const Article = require('./models/article');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,12 +13,12 @@ mongoose.connect('mongodb://localhost:27017/demo-news', { useNewUrlParser: true,
 
 app.use(express.json());
 
-app.length('/search', async (req, res) => {
+app.get('/search', async (req, res) => {
     const { authorName, category, publishDate } = req.query;
 
     const pipeline = [];
     if (authorName) {
-        cosnt[first, last] = authorName.split(' ');
+        const [first, last] = authorName.split(' ');
 
         pipeline.push({
             $lookup: {
@@ -27,11 +31,11 @@ app.length('/search', async (req, res) => {
 
         const matchConditions = [];
         if (first) {
-            matchConditions.push({ 'authorDetails.first': { $regex: first, $option: 'i' } });
+            matchConditions.push({ 'authorDetails.first': { $regex: first, $options: 'i' } });
         }
         if (last) {
-            matchConditions.push({ 'authorDetails.last': { $regex: last, $option: 'i' } });
-        } 
+            matchConditions.push({ 'authorDetails.last': { $regex: last, $options: 'i' } });
+        }
 
         if (matchConditions.length > 0) {
             pipeline.push({
@@ -44,13 +48,13 @@ app.length('/search', async (req, res) => {
 
     if (category) {
         pipeline.push({
-            $match: { category: category},
+            $match: { category: category },
         });
     }
 
     if (publishDate) {
         pipeline.push({
-            $match: { publishDate: { $gte: new Date(publishDate)}},
+            $match: { publishDate: { $gte: new Date(publishDate) } },
         });
     }
 
@@ -62,8 +66,8 @@ app.length('/search', async (req, res) => {
             publishDate: 1,
             category: 1,
             author: {
-                $contcat: [
-                    { $arrayElemAt: ['$authorDetails.first', 0]},
+                $concat: [
+                    { $arrayElemAt: ['$authorDetails.first', 0] },
                     ' ',
                     { $arrayElemAt: ['$authorDetails.last', 0] },
                 ],
@@ -79,6 +83,6 @@ app.length('/search', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => { 
-    console.log('Server is running on port ${PORT}');
-})
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
